@@ -1,0 +1,62 @@
+// proto/task_service.proto
+syntax = "proto3";
+
+package task;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option go_package="./internal/service";
+
+service TaskService {
+  rpc CreateTask (CreateTaskRequest) returns (CreateTaskResponse);
+  rpc GetTask (GetTaskRequest) returns (Task);
+  rpc UpdateTask (UpdateTaskRequest) returns (UpdateTaskResponse);
+  rpc DeleteTask (DeleteTaskRequest) returns (DeleteTaskResponse);
+  rpc ListTasks (google.protobuf.Empty) returns (ListTasksResponse);
+}
+
+message Task {
+  string id = 1;
+  string parent_id = 2;
+  string title = 3;
+  string description = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message CreateTaskRequest {
+  string parent_id = 1;
+  string title = 2;
+  string description = 3;
+}
+
+message CreateTaskResponse {
+  string id = 1;
+}
+
+message GetTaskRequest {
+  string id = 1;
+}
+
+message UpdateTaskRequest {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+}
+
+message UpdateTaskResponse {
+  bool success = 1;
+}
+
+message DeleteTaskRequest {
+  string id = 1;
+}
+
+message DeleteTaskResponse {
+  bool success = 1;
+}
+
+message ListTasksResponse {
+  repeated Task tasks = 1;
+}
