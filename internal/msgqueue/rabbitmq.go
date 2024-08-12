@@ -5,7 +5,7 @@ import (
 	"github.com/bhupeshpandey/task-manager-gallatin/internal/models"
 	"log"
 
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type rabbitMQ struct {
