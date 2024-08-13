@@ -6,14 +6,13 @@
 // - protoc             v5.27.3
 // source: internal/proto/task_service.proto
 
-package service
+package proto
 
 import (
 	context "context"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -37,7 +36,7 @@ type TaskServiceClient interface {
 	GetTask(ctx context.Context, in *GetTaskRequest, opts ...grpc.CallOption) (*Task, error)
 	UpdateTask(ctx context.Context, in *UpdateTaskRequest, opts ...grpc.CallOption) (*UpdateTaskResponse, error)
 	DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...grpc.CallOption) (*DeleteTaskResponse, error)
-	ListTasks(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListTasksResponse, error)
+	ListTasks(ctx context.Context, in *ListTasksRequest, opts ...grpc.CallOption) (*ListTasksResponse, error)
 }
 
 type taskServiceClient struct {
@@ -88,7 +87,7 @@ func (c *taskServiceClient) DeleteTask(ctx context.Context, in *DeleteTaskReques
 	return out, nil
 }
 
-func (c *taskServiceClient) ListTasks(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListTasksResponse, error) {
+func (c *taskServiceClient) ListTasks(ctx context.Context, in *ListTasksRequest, opts ...grpc.CallOption) (*ListTasksResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListTasksResponse)
 	err := c.cc.Invoke(ctx, TaskService_ListTasks_FullMethodName, in, out, cOpts...)
@@ -106,7 +105,7 @@ type TaskServiceServer interface {
 	GetTask(context.Context, *GetTaskRequest) (*Task, error)
 	UpdateTask(context.Context, *UpdateTaskRequest) (*UpdateTaskResponse, error)
 	DeleteTask(context.Context, *DeleteTaskRequest) (*DeleteTaskResponse, error)
-	ListTasks(context.Context, *emptypb.Empty) (*ListTasksResponse, error)
+	ListTasks(context.Context, *ListTasksRequest) (*ListTasksResponse, error)
 	mustEmbedUnimplementedTaskServiceServer()
 }
 
@@ -129,7 +128,7 @@ func (UnimplementedTaskServiceServer) UpdateTask(context.Context, *UpdateTaskReq
 func (UnimplementedTaskServiceServer) DeleteTask(context.Context, *DeleteTaskRequest) (*DeleteTaskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTask not implemented")
 }
-func (UnimplementedTaskServiceServer) ListTasks(context.Context, *emptypb.Empty) (*ListTasksResponse, error) {
+func (UnimplementedTaskServiceServer) ListTasks(context.Context, *ListTasksRequest) (*ListTasksResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTasks not implemented")
 }
 func (UnimplementedTaskServiceServer) mustEmbedUnimplementedTaskServiceServer() {}
@@ -226,7 +225,7 @@ func _TaskService_DeleteTask_Handler(srv interface{}, ctx context.Context, dec f
 }
 
 func _TaskService_ListTasks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(ListTasksRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -238,7 +237,7 @@ func _TaskService_ListTasks_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: TaskService_ListTasks_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TaskServiceServer).ListTasks(ctx, req.(*emptypb.Empty))
+		return srv.(TaskServiceServer).ListTasks(ctx, req.(*ListTasksRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

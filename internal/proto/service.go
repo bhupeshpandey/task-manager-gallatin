@@ -1,12 +1,10 @@
 // Gallatin/grpc/task_service.go
-package service
+package proto
 
 import (
 	"context"
 	"github.com/bhupeshpandey/task-manager-gallatin/internal/models"
 	"github.com/bhupeshpandey/task-manager-gallatin/internal/taskservice"
-	"github.com/google/uuid"
-	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -19,25 +17,15 @@ func (s *TaskServer) mustEmbedUnimplementedTaskServiceServer() {
 	panic("implement me")
 }
 
-func NewTaskServiceServer(taskService *taskservice.TaskService) *TaskServer {
+func NewTaskServiceServer(taskService *taskservice.TaskService) TaskServiceServer {
 	return &TaskServer{taskService: taskService}
 }
 
 func (s *TaskServer) CreateTask(ctx context.Context, req *CreateTaskRequest) (*CreateTaskResponse, error) {
-	var createReq *models.CreateTaskRequest
-	if req.ParentId == "" {
-		createReq = &models.CreateTaskRequest{
-			ParentID:    nil,
-			Title:       req.Title,
-			Description: req.Description,
-		}
-	} else {
-		parse := uuid.MustParse(req.ParentId)
-		createReq = &models.CreateTaskRequest{
-			ParentID:    &parse,
-			Title:       req.Title,
-			Description: req.Description,
-		}
+	var createReq = &models.CreateTaskRequest{
+		ParentId:    req.ParentId,
+		Title:       req.Title,
+		Description: req.Description,
 	}
 
 	resp, err := s.taskService.CreateTask(createReq)
@@ -46,27 +34,20 @@ func (s *TaskServer) CreateTask(ctx context.Context, req *CreateTaskRequest) (*C
 	}
 
 	return &CreateTaskResponse{
-		Id: resp.ID.String(),
+		Id: resp.Id,
 	}, nil
 }
 
 func (s *TaskServer) GetTask(ctx context.Context, req *GetTaskRequest) (*Task, error) {
-	id, err := uuid.Parse(req.Id)
+
+	task, err := s.taskService.GetTask(req.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	task, err := s.taskService.GetTask(id)
-	if err != nil {
-		return nil, err
-	}
-
-	var parentId string
-	if task.ParentID != nil {
-		parentId = task.ParentID.String()
-	}
+	parentId := task.ParentID
 	return &Task{
-		Id:          task.ID.String(),
+		Id:          task.Id,
 		ParentId:    parentId,
 		Title:       task.Title,
 		Description: task.Description,
@@ -77,7 +58,7 @@ func (s *TaskServer) GetTask(ctx context.Context, req *GetTaskRequest) (*Task, e
 
 func (s *TaskServer) UpdateTask(ctx context.Context, req *UpdateTaskRequest) (*UpdateTaskResponse, error) {
 	updateReq := &models.UpdateTaskRequest{
-		ID:          uuid.MustParse(req.Id),
+		Id:          req.Id,
 		Title:       req.Title,
 		Description: req.Description,
 	}
@@ -92,7 +73,7 @@ func (s *TaskServer) UpdateTask(ctx context.Context, req *UpdateTaskRequest) (*U
 
 func (s *TaskServer) DeleteTask(ctx context.Context, req *DeleteTaskRequest) (*DeleteTaskResponse, error) {
 	deleteReq := &models.DeleteTaskRequest{
-		ID: uuid.MustParse(req.Id),
+		Id: req.Id,
 	}
 
 	_, err := s.taskService.DeleteTask(deleteReq)
@@ -103,8 +84,13 @@ func (s *TaskServer) DeleteTask(ctx context.Context, req *DeleteTaskRequest) (*D
 	return &DeleteTaskResponse{Success: true}, nil
 }
 
-func (s *TaskServer) ListTasks(ctx context.Context, req *emptypb.Empty) (*ListTasksResponse, error) {
-	tasks, err := s.taskService.ListTasks()
+func (s *TaskServer) ListTasks(ctx context.Context, req *ListTasksRequest) (*ListTasksResponse, error) {
+	tasks, err := s.taskService.ListTasks(&models.ListTasksRequest{
+		StartTime: req.StartTime,
+		EndTime:   req.EndTime,
+		Limit:     int(req.PageSize),
+		Offset:    int(req.Page),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -112,13 +98,10 @@ func (s *TaskServer) ListTasks(ctx context.Context, req *emptypb.Empty) (*ListTa
 	var pbTasks []*Task
 
 	for _, task := range tasks.Tasks {
-		var parentId string
-		if task.ParentID != nil {
-			parentId = task.ParentID.String()
-		}
+
 		pbTasks = append(pbTasks, &Task{
-			Id:          task.ID.String(),
-			ParentId:    parentId,
+			Id:          task.Id,
+			ParentId:    task.ParentID,
 			Title:       task.Title,
 			Description: task.Description,
 			CreatedAt:   timestamppb.New(task.CreatedAt),
