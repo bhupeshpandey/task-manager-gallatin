@@ -7,7 +7,7 @@ import (
 	"github.com/bhupeshpandey/task-manager-gallatin/internal/database"
 	"github.com/bhupeshpandey/task-manager-gallatin/internal/logger"
 	"github.com/bhupeshpandey/task-manager-gallatin/internal/msgqueue"
-	"github.com/bhupeshpandey/task-manager-gallatin/internal/service"
+	"github.com/bhupeshpandey/task-manager-gallatin/internal/proto"
 	"github.com/bhupeshpandey/task-manager-gallatin/internal/taskservice"
 	"google.golang.org/grpc"
 	"log"
@@ -37,7 +37,7 @@ func main() {
 
 	tskService := taskservice.NewTaskService(db, cacheInst, msgQueue, taskLogger)
 
-	server := service.NewTaskServiceServer(tskService)
+	server := proto.NewTaskServiceServer(tskService)
 
 	//// Create and start gRPC server
 	lis, err := net.Listen("tcp", ":50051")
@@ -46,7 +46,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	service.RegisterTaskServiceServer(s, server)
+	proto.RegisterTaskServiceServer(s, server)
 
 	log.Println("Starting gRPC server on port 50051...")
 	if err := s.Serve(lis); err != nil {
