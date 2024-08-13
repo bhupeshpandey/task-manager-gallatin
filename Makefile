@@ -6,6 +6,10 @@ PROJECT_NAME=task-manager-gallatin
 SRC_DIR=./cmd
 # Build directory
 BUILD_DIR=./build
+# Docker image name
+IMAGE_NAME=task-manager-gallatin_linux_amd64
+# Docker compose file
+DOCKER_COMPOSE_FILE=docker-compose.yaml
 
 # Target binary paths
 LINUX_BINARY=$(BUILD_DIR)/$(PROJECT_NAME)_linux_amd64
@@ -29,11 +33,19 @@ build-all: build-linux build-mac build-windows
 
 # Docker build using local Linux binary
 docker-build: build-linux
-	docker build -t $(PROJECT_NAME)-service .
+	docker build -t $(IMAGE_NAME) .
+
+# Run docker-compose using the built Docker image
+docker-compose-up: docker-build
+	docker-compose -f $(DOCKER_COMPOSE_FILE) up -d
+
+# Stop the services
+docker-compose-down:
+	docker-compose -f $(DOCKER_COMPOSE_FILE) down
 
 # Clean up build directory
 clean:
 	rm -rf $(BUILD_DIR)
 
 # Phony targets to avoid conflicts with file names
-.PHONY: build-linux build-mac build-windows build-all docker-build clean
+.PHONY: build-linux build-mac build-windows build-all docker-build docker-compose-up docker-compose-down clean

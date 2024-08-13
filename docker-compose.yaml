@@ -10,13 +10,14 @@ services:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
     networks:
-      - rabbitmq_go_net
+      - gallatin-internal
 
-  postgres:
-    container_name: postgres-app
+  postgres-service:
+    container_name: postgres-service
     image: postgres:latest
     restart: always
     environment:
+      PGUSER: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
@@ -31,6 +32,8 @@ services:
       interval: 3s
       timeout: 5s
       retries: 5
+    networks:
+      - gallatin-internal
 
   cache:
     image: redis:6.2-alpine
@@ -40,11 +43,31 @@ services:
     command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
     volumes:
       - cache:/data
+    networks:
+      - gallatin-internal
+
+  # Gallatin Service
+  gallatin:
+    build: .
+    container_name: task-manager-gallatin_linux_amd64
+    environment:
+      - CONFIG_PATH=/app/config.yaml
+    depends_on:
+      - postgres-service
+      - cache
+      - rabbitmq
+    ports:
+      - "50051:50051"
+    volumes:
+      - ./config.yaml:/app/config.yaml
+      - ./CreateDB.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - gallatin-internal
 
 volumes:
   pgdata:
   cache:
     driver: local
+
 networks:
-  rabbitmq_go_net:
-    driver: bridge
+  gallatin-internal:
