@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"github.com/google/uuid"
 )
 
 type MessageQueue interface {
@@ -25,15 +24,15 @@ type Logger interface {
 var ErrTaskNotFound = errors.New("task not found")
 
 type TaskRepository interface {
-	CreateTask(task *Task) error
-	UpdateTask(task *Task) error
-	GetTaskByID(id uuid.UUID) (*Task, error)
-	DeleteTask(id uuid.UUID) error
-	ListTasks() ([]*Task, error)
+	CreateTask(*Task) error
+	UpdateTask(*Task) error
+	GetTaskByID(string) (*Task, error)
+	DeleteTask(string) error
+	ListTasks(*ListTasksRequest) ([]*Task, error)
 }
 
 type Cache interface {
-	GetTask(id uuid.UUID) ([]byte, error)
-	SetTask(id uuid.UUID, data []byte) error
-	DeleteTask(id uuid.UUID) error
+	GetTask(id string) ([]byte, error)
+	SetTask(id string, data []byte) error
+	DeleteTask(id string) error
 }

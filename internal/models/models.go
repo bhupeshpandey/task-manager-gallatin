@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/google/uuid"
 	"time"
 )
 
@@ -11,28 +10,28 @@ type Event struct {
 }
 
 type Task struct {
-	ID          uuid.UUID  `json:"id"`
-	ParentID    *uuid.UUID `json:"parent_id,omitempty"`
-	Title       string     `json:"title"`
-	Description string     `json:"description"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	Id          string    `json:"id"`
+	ParentID    string    `json:"parent_id,omitempty"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type CreateTaskRequest struct {
-	ParentID    *uuid.UUID `json:"parent_id,omitempty"`
-	Title       string     `json:"title"`
-	Description string     `json:"description"`
+	ParentId    string `json:"parent_id,omitempty"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 }
 
 type CreateTaskResponse struct {
-	ID uuid.UUID `json:"id"`
+	Id string `json:"id"`
 }
 
 type UpdateTaskRequest struct {
-	ID          uuid.UUID `json:"id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
+	Id          string `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 }
 
 type UpdateTaskResponse struct {
@@ -43,8 +42,15 @@ type ListTasksResponse struct {
 	Tasks []*Task `json:"tasks"`
 }
 
+type ListTasksRequest struct {
+	StartTime string
+	EndTime   string
+	Limit     int
+	Offset    int
+}
+
 type DeleteTaskRequest struct {
-	ID uuid.UUID `json:"id"`
+	Id string `json:"id"`
 }
 
 type DeleteTaskResponse struct {
