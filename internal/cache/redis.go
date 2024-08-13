@@ -2,9 +2,9 @@ package cache
 
 import (
 	"context"
+	"errors"
 	. "github.com/bhupeshpandey/task-manager-gallatin/internal/models"
 	"github.com/go-redis/redis/v8"
-	"github.com/google/uuid"
 	"time"
 )
 
@@ -20,18 +20,18 @@ func newRedisCache(client *redis.Client) Cache {
 	}
 }
 
-func (r *redisCache) GetTask(id uuid.UUID) ([]byte, error) {
-	data, err := r.client.Get(r.ctx, id.String()).Result()
-	if err == redis.Nil {
+func (r *redisCache) GetTask(id string) ([]byte, error) {
+	data, err := r.client.Get(r.ctx, id).Result()
+	if errors.Is(err, redis.Nil) {
 		return nil, nil // Cache miss
 	}
 	return []byte(data), err
 }
 
-func (r *redisCache) SetTask(id uuid.UUID, data []byte) error {
-	return r.client.Set(r.ctx, id.String(), data, 10*time.Minute).Err() // Cache for 10 minutes
+func (r *redisCache) SetTask(id string, data []byte) error {
+	return r.client.Set(r.ctx, id, data, 10*time.Minute).Err() // Cache for 10 minutes
 }
 
-func (r *redisCache) DeleteTask(id uuid.UUID) error {
-	return r.client.Del(r.ctx, id.String()).Err()
+func (r *redisCache) DeleteTask(id string) error {
+	return r.client.Del(r.ctx, id).Err()
 }

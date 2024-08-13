@@ -27,8 +27,8 @@ func NewTaskService(repo TaskRepository, cache Cache, queue MessageQueue, logger
 
 func (s *TaskService) CreateTask(req *CreateTaskRequest) (*CreateTaskResponse, error) {
 	task := &Task{
-		ID:          uuid.New(),
-		ParentID:    req.ParentID,
+		Id:          uuid.New().String(),
+		ParentID:    req.ParentId,
 		Title:       req.Title,
 		Description: req.Description,
 		CreatedAt:   time.Now(),
@@ -44,7 +44,7 @@ func (s *TaskService) CreateTask(req *CreateTaskRequest) (*CreateTaskResponse, e
 	// Cache the newly created task
 	taskData, err := json.Marshal(task)
 	if err == nil {
-		s.cache.SetTask(task.ID, taskData)
+		s.cache.SetTask(task.Id, taskData)
 	}
 
 	// Publish an event to the message queue
@@ -59,10 +59,10 @@ func (s *TaskService) CreateTask(req *CreateTaskRequest) (*CreateTaskResponse, e
 
 	s.logger.Log(InfoLevel, "Created task: "+task.Title)
 
-	return &CreateTaskResponse{ID: task.ID}, nil
+	return &CreateTaskResponse{Id: task.Id}, nil
 }
 
-func (s *TaskService) GetTask(id uuid.UUID) (*Task, error) {
+func (s *TaskService) GetTask(id string) (*Task, error) {
 	// Try to get the task from the cache
 	cachedData, err := s.cache.GetTask(id)
 	if err == nil && cachedData != nil {
@@ -78,7 +78,7 @@ func (s *TaskService) GetTask(id uuid.UUID) (*Task, error) {
 	task, err := s.repo.GetTaskByID(id)
 	if err != nil {
 		if errors.Is(err, ErrTaskNotFound) {
-			s.logger.Log(ErrorLevel, "Task not found: "+id.String())
+			s.logger.Log(ErrorLevel, "Task not found: "+id)
 			return nil, err
 		}
 		s.logger.Log(InfoLevel, "Error retrieving task from database: "+err.Error())
@@ -99,10 +99,10 @@ func (s *TaskService) GetTask(id uuid.UUID) (*Task, error) {
 }
 
 func (s *TaskService) UpdateTask(req *UpdateTaskRequest) (*UpdateTaskResponse, error) {
-	task, err := s.repo.GetTaskByID(req.ID)
+	task, err := s.repo.GetTaskByID(req.Id)
 	if err != nil {
 		if errors.Is(err, ErrTaskNotFound) {
-			s.logger.Log(ErrorLevel, "Task not found: "+req.ID.String())
+			s.logger.Log(ErrorLevel, "Task not found: "+req.Id)
 			return nil, err
 		}
 		s.logger.Log(ErrorLevel, "Error retrieving task for update: "+err.Error())
@@ -123,7 +123,7 @@ func (s *TaskService) UpdateTask(req *UpdateTaskRequest) (*UpdateTaskResponse, e
 	// Update the cache with the new task data
 	taskData, err := json.Marshal(task)
 	if err == nil {
-		s.cache.SetTask(task.ID, taskData)
+		s.cache.SetTask(task.Id, taskData)
 	}
 
 	// Publish an event to the message queue
@@ -141,10 +141,10 @@ func (s *TaskService) UpdateTask(req *UpdateTaskRequest) (*UpdateTaskResponse, e
 }
 
 func (s *TaskService) DeleteTask(req *DeleteTaskRequest) (*DeleteTaskResponse, error) {
-	err := s.repo.DeleteTask(req.ID)
+	err := s.repo.DeleteTask(req.Id)
 	if err != nil {
 		if errors.Is(err, ErrTaskNotFound) {
-			s.logger.Log(ErrorLevel, "Task not found: "+req.ID.String())
+			s.logger.Log(ErrorLevel, "Task not found: "+req.Id)
 			return nil, err
 		}
 		s.logger.Log(ErrorLevel, "Error deleting task: "+err.Error())
@@ -152,16 +152,16 @@ func (s *TaskService) DeleteTask(req *DeleteTaskRequest) (*DeleteTaskResponse, e
 	}
 
 	// Remove the task from the cache
-	s.cache.DeleteTask(req.ID)
+	s.cache.DeleteTask(req.Id)
 
 	// Publish an event to the message queue
 	event := &Event{
 		Name: "TaskDeleted",
-		Data: req.ID,
+		Data: req.Id,
 	}
 	s.queue.Publish(event)
 
-	s.logger.Log(InfoLevel, "Deleted task: "+req.ID.String())
+	s.logger.Log(InfoLevel, "Deleted task: "+req.Id)
 	return &DeleteTaskResponse{Success: true}, nil
 }
 

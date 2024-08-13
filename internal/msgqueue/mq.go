@@ -25,7 +25,7 @@ func NewMesageQueue(config *models.MessageQueueConfig) models.MessageQueue {
 		// not handling right now.
 		if config.Kafka != nil {
 			fmt.Printf("Using Kafka with brokers: %v\n", config.Kafka.Brokers)
-			fmt.Printf("Topic: %s, Group ID: %s\n", config.Kafka.Topic, config.Kafka.GroupID)
+			fmt.Printf("Topic: %s, Group Id: %s\n", config.Kafka.Topic, config.Kafka.GroupID)
 		} else {
 			log.Fatalf("Kafka configuration is missing")
 		}
