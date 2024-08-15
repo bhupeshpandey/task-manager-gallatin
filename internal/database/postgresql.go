@@ -18,9 +18,15 @@ func NewPostgresRepository(db *sql.DB) models.TaskRepository {
 }
 
 func (r *postgresRepository) CreateTask(task *models.Task) error {
+	//query := `INSERT INTO tasks (id, title, description, created_at, updated_at)
+	//		  VALUES ($1, $3, $4, $5, $6)`
+	//if task.ParentID != "" {
 	query := `INSERT INTO tasks (id, parent_id, title, description, created_at, updated_at)
 			  VALUES ($1, $2, $3, $4, $5, $6)`
 	_, err := r.db.Exec(query, task.Id, task.ParentID, task.Title, task.Description, task.CreatedAt, task.UpdatedAt)
+	return err
+	//}
+	//_, err := r.db.Exec(query, task.Id, task.ParentID, task.Title, task.Description, task.CreatedAt, task.UpdatedAt)
 	return err
 }
 
@@ -38,7 +44,7 @@ func (r *postgresRepository) GetTaskByID(id string) (*models.Task, error) {
 }
 
 func (r *postgresRepository) DeleteTask(id string) error {
-	query := "DELETE FROM `tasks` WHERE id = $1"
+	query := "DELETE FROM tasks WHERE id = $1"
 	_, err := r.db.Exec(query, id)
 	return err
 }
@@ -93,10 +99,12 @@ func (r *postgresRepository) ListTasks(request *models.ListTasksRequest) ([]*mod
 	var tasks []*models.Task
 	for rows.Next() {
 		task := &models.Task{}
-		if err := rows.Scan(&task.Id, &task.ParentID, &task.Title, &task.Description, &task.CreatedAt, &task.UpdatedAt); err != nil {
+
+		if err = rows.Scan(&task.Id, &task.ParentID, &task.Title, &task.Description, &task.CreatedAt, &task.UpdatedAt); err != nil {
 			return nil, err
+		} else {
+			tasks = append(tasks, task)
 		}
-		tasks = append(tasks, task)
 	}
 
 	return tasks, nil

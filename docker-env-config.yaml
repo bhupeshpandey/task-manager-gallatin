@@ -1,0 +1,41 @@
+server:
+  port: 8080
+  host: "localhost"
+
+database:
+  type: "postgres"
+  postgres:
+    host: "postgres-service"
+    port: 5432
+    user: "postgres"
+    password: "postgres"
+    dbname: "postgres"
+
+message_queue:
+  type: "RABBITMQ"  # Can be "RABBITMQ" or "KAFKA"
+
+  rabbitmq:
+    url: "amqp://guest:guest@rabbitmq:5672/"
+    exchange: "amq.direct"
+    queue: "data-queue"
+    routing_key: "data-routing-key"
+
+  # Uncomment the following lines and comment out the RabbitMQ section to use Kafka instead.
+  # kafka:
+  #   brokers:
+  #     - "localhost:9092"
+  #   topic: "my_topic"
+  #   group_id: "my_group"
+
+logging:
+  type: "zap"
+  environment: "dev"
+  logLevel: "info"
+
+cache:
+  type: "redis"
+  redis:
+    host: "localhost"
+    port: 6379
+    password: "eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81"
+    db: 0

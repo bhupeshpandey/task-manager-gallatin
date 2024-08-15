@@ -16,11 +16,13 @@ import (
 )
 
 func main() {
-	wd, _ := os.Getwd()
-
-	fmt.Println(wd)
+	defaultEnv := "local"
+	env, exists := os.LookupEnv("APP_ENV")
+	if exists {
+		defaultEnv = env
+	}
 	// Load configuration
-	conf, err := config.LoadConfig("./config.yaml")
+	conf, err := config.LoadConfig(fmt.Sprintf("./%s-env-config.yaml", defaultEnv))
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}

@@ -44,7 +44,7 @@ func (s *TaskService) CreateTask(req *CreateTaskRequest) (*CreateTaskResponse, e
 	// Cache the newly created task
 	taskData, err := json.Marshal(task)
 	if err == nil {
-		err := s.cache.SetTask(task.Id, taskData)
+		err := s.cache.SetValue(task.Id, taskData)
 		if err != nil {
 			return nil, err
 		}
@@ -53,7 +53,7 @@ func (s *TaskService) CreateTask(req *CreateTaskRequest) (*CreateTaskResponse, e
 	// Publish an event to the message queue
 	event := &Event{
 		Name: "TaskCreated",
-		Data: task,
+		Data: *task,
 	}
 	if err := s.queue.Publish(event); err != nil {
 		s.logger.Log(ErrorLevel, "Failed to publish event: "+err.Error())
@@ -67,7 +67,7 @@ func (s *TaskService) CreateTask(req *CreateTaskRequest) (*CreateTaskResponse, e
 
 func (s *TaskService) GetTask(id string) (*Task, error) {
 	// Try to get the task from the cache
-	cachedData, err := s.cache.GetTask(id)
+	cachedData, err := s.cache.GetValue(id)
 	if err == nil && cachedData != nil {
 		task := &Task{}
 		err = json.Unmarshal(cachedData, task)
@@ -91,7 +91,7 @@ func (s *TaskService) GetTask(id string) (*Task, error) {
 	// Cache the task
 	taskData, err := json.Marshal(task)
 	if err == nil {
-		err := s.cache.SetTask(id, taskData)
+		err := s.cache.SetValue(id, taskData)
 		if err != nil {
 			return nil, err
 		}
@@ -129,7 +129,7 @@ func (s *TaskService) UpdateTask(req *UpdateTaskRequest) (*UpdateTaskResponse, e
 	// Update the cache with the new task data
 	taskData, err := json.Marshal(task)
 	if err == nil {
-		err := s.cache.SetTask(task.Id, taskData)
+		err := s.cache.SetValue(task.Id, taskData)
 		if err != nil {
 			return nil, err
 		}
@@ -138,7 +138,7 @@ func (s *TaskService) UpdateTask(req *UpdateTaskRequest) (*UpdateTaskResponse, e
 	// Publish an event to the message queue
 	event := &Event{
 		Name: "TaskUpdated",
-		Data: task,
+		Data: *task,
 	}
 	if err := s.queue.Publish(event); err != nil {
 		s.logger.Log(ErrorLevel, "Failed to publish event: "+err.Error())
@@ -161,7 +161,7 @@ func (s *TaskService) DeleteTask(req *DeleteTaskRequest) (*DeleteTaskResponse, e
 	}
 
 	// Remove the task from the cache
-	err = s.cache.DeleteTask(req.Id)
+	err = s.cache.DeleteEntry(req.Id)
 	if err != nil {
 		return nil, err
 	}

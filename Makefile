@@ -7,7 +7,7 @@ SRC_DIR=./cmd
 # Build directory
 BUILD_DIR=./build
 # Docker image name
-IMAGE_NAME=task-manager-gallatin_linux_amd64
+IMAGE_NAME=task-manager-gallatin
 # Docker compose file
 DOCKER_COMPOSE_FILE=docker-compose.yaml
 
@@ -15,6 +15,9 @@ DOCKER_COMPOSE_FILE=docker-compose.yaml
 LINUX_BINARY=$(BUILD_DIR)/$(PROJECT_NAME)_linux_amd64
 MAC_BINARY=$(BUILD_DIR)/$(PROJECT_NAME)_darwin_amd64
 WINDOWS_BINARY=$(BUILD_DIR)/$(PROJECT_NAME)_windows_amd64.exe
+
+env:
+	export APP_ENV=docker
 
 # Build for Linux
 build-linux:
@@ -29,10 +32,13 @@ build-windows:
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o $(WINDOWS_BINARY) $(SRC_DIR)/main.go
 
 # Build for all platforms
-build-all: build-linux build-mac build-windows
+build-all: env build-linux build-mac build-windows
+
+docker-remove:
+	docker rmi $(IMAGE_NAME)
 
 # Docker build using local Linux binary
-docker-build: build-linux
+docker-build: env build-linux
 	docker build -t $(IMAGE_NAME) .
 
 # Run docker-compose using the built Docker image
@@ -48,4 +54,4 @@ clean:
 	rm -rf $(BUILD_DIR)
 
 # Phony targets to avoid conflicts with file names
-.PHONY: build-linux build-mac build-windows build-all docker-build docker-compose-up docker-compose-down clean
+.PHONY: env build-linux build-mac build-windows build-all docker-build docker-compose-up docker-compose-down clean

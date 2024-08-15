@@ -11,10 +11,10 @@ type MessageQueue interface {
 type LogLevel string
 
 const (
-	ErrorLevel = "error"
-	WarnLevel  = "warn"
-	DebugLevel = "debug"
-	InfoLevel  = "info"
+	ErrorLevel LogLevel = "error"
+	WarnLevel  LogLevel = "warn"
+	DebugLevel LogLevel = "debug"
+	InfoLevel  LogLevel = "info"
 )
 
 type Logger interface {
@@ -32,7 +32,7 @@ type TaskRepository interface {
 }
 
 type Cache interface {
-	GetTask(id string) ([]byte, error)
-	SetTask(id string, data []byte) error
-	DeleteTask(id string) error
+	GetValue(id string) ([]byte, error)
+	SetValue(id string, data []byte) error
+	DeleteEntry(id string) error
 }

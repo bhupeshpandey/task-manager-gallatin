@@ -23,7 +23,7 @@ services:
       POSTGRES_DB: postgres
       POSTGRES_HOST_AUTH_METHOD: trust
     ports:
-      - "5434:5432"
+      - "5432:5432"
     volumes:
       - ./web/misc/postgres:/docker-entrypoint-initdb.d
       - pgdata:/var/lib/postgresql/data
@@ -46,12 +46,12 @@ services:
     networks:
       - gallatin-internal
 
-  # Gallatin Service
+#  # Gallatin Service
   gallatin:
     build: .
-    container_name: task-manager-gallatin_linux_amd64
+    container_name: task-manager-gallatin
     environment:
-      - CONFIG_PATH=/app/config.yaml
+      - CONFIG_PATH=/app/docker-env-config.yaml
     depends_on:
       - postgres-service
       - cache
@@ -59,7 +59,7 @@ services:
     ports:
       - "50051:50051"
     volumes:
-      - ./config.yaml:/app/config.yaml
+      - ./local-env-config.yaml:/app/docker-env-config.yaml
       - ./CreateDB.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - gallatin-internal

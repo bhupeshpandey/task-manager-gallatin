@@ -17,6 +17,6 @@ func NewCache(cfg models.CacheConfig) models.Cache {
 		client := redis.NewClient(options)
 		cacheInst = newRedisCache(client)
 	}
-	// Add condition for more cache type,. as of only redis
+	// Open to handle more cache type in the future, as of only redis
 	return cacheInst
 }
