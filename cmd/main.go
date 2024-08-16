@@ -6,6 +6,7 @@ import (
 	"github.com/bhupeshpandey/task-manager-gallatin/internal/config"
 	"github.com/bhupeshpandey/task-manager-gallatin/internal/database"
 	"github.com/bhupeshpandey/task-manager-gallatin/internal/logger"
+	"github.com/bhupeshpandey/task-manager-gallatin/internal/metrics"
 	"github.com/bhupeshpandey/task-manager-gallatin/internal/msgqueue"
 	"github.com/bhupeshpandey/task-manager-gallatin/internal/proto"
 	"github.com/bhupeshpandey/task-manager-gallatin/internal/taskservice"
@@ -27,6 +28,10 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
+	taskLogger := logger.NewLogger(conf.Logging)
+	metricConf := conf.MetricsConfig
+	metricConf.Logger = taskLogger
+	metrics.InitializePrometheus(&metricConf)
 	//conf.Database
 	// Setup database, cache, message queue, and logger
 	db := database.NewDatabase(conf.Database)
@@ -34,8 +39,6 @@ func main() {
 	cacheInst := cache.NewCache(conf.Cache)
 
 	msgQueue := msgqueue.NewMesageQueue(&conf.MessageQueue)
-
-	taskLogger := logger.NewLogger(conf.Logging)
 
 	tskService := taskservice.NewTaskService(db, cacheInst, msgQueue, taskLogger)
 
@@ -46,6 +49,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
+	go metrics.StartServer()
 
 	s := grpc.NewServer()
 	proto.RegisterTaskServiceServer(s, server)

@@ -18,6 +18,12 @@ type Task struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+type MetricsConfig struct {
+	Host   string `yaml:"host"`
+	Port   string `yaml:"port"`
+	Logger Logger
+}
+
 type CreateTaskRequest struct {
 	ParentId    string `json:"parent_id,omitempty"`
 	Title       string `json:"title"`
@@ -59,11 +65,12 @@ type DeleteTaskResponse struct {
 
 // Config represents the application configuration
 type Config struct {
-	Server       ServerConfig       `yaml:"server"`
-	Database     DatabaseConfig     `yaml:"database"`
-	Logging      LoggingConfig      `yaml:"logging"`
-	MessageQueue MessageQueueConfig `yaml:"message_queue"`
-	Cache        CacheConfig        `yaml:"cache"`
+	Server        ServerConfig       `yaml:"server"`
+	Database      DatabaseConfig     `yaml:"database"`
+	Logging       LoggingConfig      `yaml:"logging"`
+	MessageQueue  MessageQueueConfig `yaml:"message_queue"`
+	Cache         CacheConfig        `yaml:"cache"`
+	MetricsConfig MetricsConfig      `yaml:"prometheus"`
 }
 
 type CacheConfig struct {

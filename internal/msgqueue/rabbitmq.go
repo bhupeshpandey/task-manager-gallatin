@@ -2,10 +2,20 @@ package msgqueue
 
 import (
 	"encoding/json"
+	"github.com/bhupeshpandey/task-manager-gallatin/internal/metrics"
 	"github.com/bhupeshpandey/task-manager-gallatin/internal/models"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"log"
 
 	amqp "github.com/rabbitmq/amqp091-go"
+)
+
+var (
+	rmqMessagesTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "rabbitmq_total_messages_send",
+		Help: "Total number of Rabbit MQ messages sent",
+	}, []string{"TaskEvent", "TaskId"})
 )
 
 type rabbitMQ struct {
@@ -18,6 +28,8 @@ type rabbitMQ struct {
 }
 
 func newRabbitMQ(config *models.RabbitMQConfig) models.MessageQueue {
+
+	metrics.RegisterMetric(rmqMessagesTotal)
 	// Connect to RabbitMQ server
 	conn, err := amqp.Dial(config.URL)
 	if err != nil {
@@ -80,6 +92,21 @@ func (r *rabbitMQ) Publish(event *models.Event) error {
 		log.Fatalf("Failed to publish a message: %v", err)
 	}
 
+	var labelValues = make([]string, 2)
+	switch event.Data.(type) {
+	case models.Task:
+		labelValues[0] = event.Name
+		labelValues[1] = event.Data.(models.Task).Id
+		//labelValues = append(labelValues, event.Name, event.Data.(*models.Task).Id)
+	case string:
+		labelValues[0] = event.Name
+		labelValues[1] = event.Data.(string)
+	}
+
+	values := rmqMessagesTotal.WithLabelValues(labelValues...)
+	if values != nil {
+		values.Inc()
+	}
 	log.Printf("Published event: %s", event.Name)
 	return nil
 }

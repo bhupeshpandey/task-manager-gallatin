@@ -47,22 +47,22 @@ services:
       - gallatin-internal
 
 #  # Gallatin Service
-  gallatin:
-    build: .
-    container_name: task-manager-gallatin
-    environment:
-      - CONFIG_PATH=/app/docker-env-config.yaml
-    depends_on:
-      - postgres-service
-      - cache
-      - rabbitmq
-    ports:
-      - "50051:50051"
-    volumes:
-      - ./local-env-config.yaml:/app/docker-env-config.yaml
-      - ./CreateDB.sql:/docker-entrypoint-initdb.d/init.sql
-    networks:
-      - gallatin-internal
+#  gallatin:
+#    build: .
+#    container_name: task-manager-gallatin
+#    environment:
+#      - CONFIG_PATH=/app/docker-env-config.yaml
+#    depends_on:
+#      - postgres-service
+#      - cache
+#      - rabbitmq
+#    ports:
+#      - "50051:50051"
+#    volumes:
+#      - ./local-env-config.yaml:/app/docker-env-config.yaml
+#      - ./CreateDB.sql:/docker-entrypoint-initdb.d/init.sql
+#    networks:
+#      - gallatin-internal
 
 volumes:
   pgdata:
