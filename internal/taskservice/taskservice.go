@@ -3,11 +3,12 @@ package taskservice
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	. "github.com/bhupeshpandey/task-manager-gallatin/internal/models"
 	"github.com/google/uuid"
 	"time"
 )
+
+var ()
 
 type TaskService struct {
 	repo   TaskRepository
@@ -37,7 +38,7 @@ func (s *TaskService) CreateTask(req *CreateTaskRequest) (*CreateTaskResponse, e
 
 	// Save the task to the database
 	if err := s.repo.CreateTask(task); err != nil {
-		s.logger.Log(ErrorLevel, "Error creating task: "+err.Error())
+		s.logger.Log(ErrorLevel, "Error creating task: ", err.Error())
 		return nil, err
 	}
 
@@ -56,11 +57,11 @@ func (s *TaskService) CreateTask(req *CreateTaskRequest) (*CreateTaskResponse, e
 		Data: *task,
 	}
 	if err := s.queue.Publish(event); err != nil {
-		s.logger.Log(ErrorLevel, "Failed to publish event: "+err.Error())
+		s.logger.Log(ErrorLevel, "Failed to publish event: ", err.Error())
 		return nil, err
 	}
 
-	s.logger.Log(InfoLevel, "Created task: "+task.Title)
+	s.logger.Log(InfoLevel, "Task Created", task.Title)
 
 	return &CreateTaskResponse{Id: task.Id}, nil
 }
@@ -72,7 +73,7 @@ func (s *TaskService) GetTask(id string) (*Task, error) {
 		task := &Task{}
 		err = json.Unmarshal(cachedData, task)
 		if err == nil {
-			s.logger.Log(InfoLevel, "Task retrieved from cache: "+task.Title)
+			s.logger.Log(InfoLevel, "Task retrieved from cache: ", task.Title)
 			return task, nil
 		}
 	}
@@ -81,10 +82,10 @@ func (s *TaskService) GetTask(id string) (*Task, error) {
 	task, err := s.repo.GetTaskByID(id)
 	if err != nil {
 		if errors.Is(err, ErrTaskNotFound) {
-			s.logger.Log(ErrorLevel, "Task not found: "+id)
+			s.logger.Log(ErrorLevel, "Task not found: ", id)
 			return nil, err
 		}
-		s.logger.Log(InfoLevel, "Error retrieving task from database: "+err.Error())
+		s.logger.Log(ErrorLevel, "Error retrieving task from database: ", err.Error())
 		return nil, err
 	}
 
@@ -100,7 +101,7 @@ func (s *TaskService) GetTask(id string) (*Task, error) {
 		return nil, err
 	}
 
-	s.logger.Log(InfoLevel, "Task retrieved from database: "+task.Title)
+	s.logger.Log(InfoLevel, "Task retrieved from database: ", task.Title)
 	return task, nil
 }
 
@@ -108,10 +109,10 @@ func (s *TaskService) UpdateTask(req *UpdateTaskRequest) (*UpdateTaskResponse, e
 	task, err := s.repo.GetTaskByID(req.Id)
 	if err != nil {
 		if errors.Is(err, ErrTaskNotFound) {
-			s.logger.Log(ErrorLevel, "Task not found: "+req.Id)
+			s.logger.Log(ErrorLevel, "Task not found: ", req.Id)
 			return nil, err
 		}
-		s.logger.Log(ErrorLevel, "Error retrieving task for update: "+err.Error())
+		s.logger.Log(ErrorLevel, "Error retrieving task for update: ", err.Error())
 		return nil, err
 	}
 
@@ -121,8 +122,8 @@ func (s *TaskService) UpdateTask(req *UpdateTaskRequest) (*UpdateTaskResponse, e
 	task.UpdatedAt = time.Now()
 
 	// Save the updated task to the database
-	if err := s.repo.UpdateTask(task); err != nil {
-		s.logger.Log(ErrorLevel, "Error updating task: "+err.Error())
+	if err = s.repo.UpdateTask(task); err != nil {
+		s.logger.Log(ErrorLevel, "Error updating task: ", err.Error())
 		return nil, err
 	}
 
@@ -131,6 +132,7 @@ func (s *TaskService) UpdateTask(req *UpdateTaskRequest) (*UpdateTaskResponse, e
 	if err == nil {
 		err := s.cache.SetValue(task.Id, taskData)
 		if err != nil {
+			s.logger.Log(ErrorLevel, "Error setting cache: ", err.Error())
 			return nil, err
 		}
 	}
@@ -140,12 +142,12 @@ func (s *TaskService) UpdateTask(req *UpdateTaskRequest) (*UpdateTaskResponse, e
 		Name: "TaskUpdated",
 		Data: *task,
 	}
-	if err := s.queue.Publish(event); err != nil {
-		s.logger.Log(ErrorLevel, "Failed to publish event: "+err.Error())
+	if err = s.queue.Publish(event); err != nil {
+		s.logger.Log(ErrorLevel, "Failed to publish event: ", err.Error())
 		return nil, err
 	}
 
-	s.logger.Log(InfoLevel, "Updated task: "+task.Title)
+	s.logger.Log(InfoLevel, "Updated task: ", task.Title)
 	return &UpdateTaskResponse{Success: true}, nil
 }
 
@@ -153,16 +155,17 @@ func (s *TaskService) DeleteTask(req *DeleteTaskRequest) (*DeleteTaskResponse, e
 	err := s.repo.DeleteTask(req.Id)
 	if err != nil {
 		if errors.Is(err, ErrTaskNotFound) {
-			s.logger.Log(ErrorLevel, "Task not found: "+req.Id)
+			s.logger.Log(ErrorLevel, "Task not found: ", req.Id)
 			return nil, err
 		}
-		s.logger.Log(ErrorLevel, "Error deleting task: "+err.Error())
+		s.logger.Log(ErrorLevel, "Error deleting task: ", err.Error())
 		return nil, err
 	}
 
 	// Remove the task from the cache
 	err = s.cache.DeleteEntry(req.Id)
 	if err != nil {
+		s.logger.Log(ErrorLevel, "Error deleting task: ", err.Error())
 		return nil, err
 	}
 
@@ -171,19 +174,23 @@ func (s *TaskService) DeleteTask(req *DeleteTaskRequest) (*DeleteTaskResponse, e
 		Name: "TaskDeleted",
 		Data: req.Id,
 	}
-	s.queue.Publish(event)
+	err = s.queue.Publish(event)
+	if err != nil {
+		s.logger.Log(ErrorLevel, "Unable to publish: ", err.Error())
+		return nil, err
+	}
 
-	s.logger.Log(InfoLevel, "Deleted task: "+req.Id)
+	s.logger.Log(InfoLevel, "Deleted task: ", req.Id)
 	return &DeleteTaskResponse{Success: true}, nil
 }
 
 func (s *TaskService) ListTasks(request *ListTasksRequest) (*ListTasksResponse, error) {
 	tasks, err := s.repo.ListTasks(request)
 	if err != nil {
-		s.logger.Log(ErrorLevel, "Error listing tasks: "+err.Error())
+		s.logger.Log(ErrorLevel, "Error listing tasks: ", err.Error())
 		return nil, err
 	}
 
-	s.logger.Log(ErrorLevel, fmt.Sprintf("Listed tasks, count: %d", len(tasks)))
+	s.logger.Log(InfoLevel, "Listed tasks, count:", len(tasks))
 	return &ListTasksResponse{Tasks: tasks}, nil
 }
